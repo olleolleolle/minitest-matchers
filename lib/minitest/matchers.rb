@@ -4,10 +4,12 @@ module MiniTest::Matchers
   VERSION = "1.0.3"
 
   def must &block
-    matcher = yield
-    check_matcher matcher
+    matcher = nil
 
-    it "must #{matcher.description}" do
+    it "must" do
+      matcher = instance_eval &block
+
+      self.class.test_descriptions[__method__.to_s] = "must " + matcher.description
       result = matcher.matches? subject
 
       failure_message = if matcher.respond_to? :failure_message
@@ -23,15 +25,18 @@ module MiniTest::Matchers
   end
 
   def wont &block
-    matcher = yield
-    check_matcher matcher
+    matcher = nil
 
-    it "wont #{matcher.description}" do
+    it "wont" do
+      matcher = yield
+
       result = if matcher.respond_to? :does_not_match?
                  matcher.does_not_match?(subject)
                else
                  !matcher.matches?(subject)
                end
+
+      self.class.test_descriptions[__method__.to_s] = "wont " + matcher.description
 
       failure_message = if matcher.respond_to? :negative_failure_message
                           matcher.negative_failure_message
